@@ -6,7 +6,7 @@ which supports connections multi-backend relay and proxy-level retry.
 
 ## Motivation 
 
- * _(:з」∠)_ .rprp zekamaShi
+ * \_(:з」∠)\_ .rprp zekamaShi
  * Try netty 4.1 proxy handler.
  * `pr` means Proxy Retry too :)
 
