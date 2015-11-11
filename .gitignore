@@ -22,7 +22,7 @@
 *.iws
 
 # temp ignore
-/conf/
+/etc/
 /log/
 *.log
 *.cache

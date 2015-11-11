@@ -5,6 +5,9 @@ package com.github.sinsinpub.pero.frontend;
  */
 public interface SocksServer {
 
+    /** Socks server implementation name registered in DI container. */
+    static final String SOCKS_SERVER_BEAN_NAME = "socksServer";
+
     /**
      * Runs until interrupted.
      * 

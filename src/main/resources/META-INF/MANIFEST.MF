@@ -1,0 +1,3 @@
+Manifest-Version: 1.0
+Implementation-Vendor: sin_sin
+Implementation-Vendor-Id: com.github.sinsinpub

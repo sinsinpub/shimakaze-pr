@@ -7,6 +7,9 @@ package com.github.sinsinpub.pero.factory;
  */
 public interface InstanceFactory {
 
+    /** Property name when configure implementation. */
+    static final String FACTORY_PROP_NAME = "di.factory.name";
+
     <T> T getInstance(Class<T> beanClass);
 
     <T> T getInstance(Class<T> beanClass, String beanName);

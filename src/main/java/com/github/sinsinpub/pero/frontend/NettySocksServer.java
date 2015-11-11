@@ -16,21 +16,40 @@
 package com.github.sinsinpub.pero.frontend;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInboundHandler;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+
+import javax.annotation.Resource;
+
 import jodd.petite.meta.PetiteBean;
 import jodd.petite.meta.PetiteInject;
 
-@PetiteBean("socksServer")
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import com.github.sinsinpub.pero.ApplicationVersion;
+import com.github.sinsinpub.pero.config.AppProps;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+
+@PetiteBean(SocksServer.SOCKS_SERVER_BEAN_NAME)
+@Component(SocksServer.SOCKS_SERVER_BEAN_NAME)
 public final class NettySocksServer implements SocksServer {
 
-    private int port = Integer.valueOf(System.getProperty("port", "1080"));
+    private static final Logger logger = LoggerFactory.getLogger(NettySocksServer.class);
+    private int port = AppProps.PROPS.getInteger("socks.port", 1080);
+
     @PetiteInject
-    private ChannelInitializer<?> socksServerInitializer;
+    @Resource
+    @Inject
+    @Named("socksServerInitializer")
+    private ChannelInboundHandler socksServerInitializer;
 
     public NettySocksServer() {
     }
@@ -44,7 +63,11 @@ public final class NettySocksServer implements SocksServer {
                     .channel(NioServerSocketChannel.class)
                     .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(getSocksServerInitializer());
-            b.bind(getPort()).sync().channel().closeFuture().sync();
+            ChannelFuture cf = b.bind(getPort()).sync();
+            logger.info(String.format("Proxy server %s %s started.",
+                    ApplicationVersion.DEFAULT.getApplicationName(),
+                    ApplicationVersion.DEFAULT.getApplicationVersion()));
+            cf.channel().closeFuture().sync();
         } finally {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();
@@ -59,11 +82,11 @@ public final class NettySocksServer implements SocksServer {
         this.port = port;
     }
 
-    public ChannelInitializer<?> getSocksServerInitializer() {
+    public ChannelInboundHandler getSocksServerInitializer() {
         return socksServerInitializer;
     }
 
-    public void setSocksServerInitializer(ChannelInitializer<?> socksServerInitializer) {
+    public void setSocksServerInitializer(ChannelInboundHandler socksServerInitializer) {
         this.socksServerInitializer = socksServerInitializer;
     }
 

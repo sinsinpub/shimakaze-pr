@@ -35,15 +35,21 @@ import io.netty.util.concurrent.Promise;
 
 import java.net.InetSocketAddress;
 
+import javax.inject.Singleton;
+
 import jodd.petite.meta.PetiteBean;
 import jodd.util.StringUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
+import com.github.sinsinpub.pero.config.AppProps;
 import com.github.sinsinpub.pero.utils.NettyChannelUtils;
 
 @PetiteBean("connectBackendHandler")
+@Component("connectBackendHandler")
+@Singleton
 @ChannelHandler.Sharable
 public final class ConnectBackendHandler extends SimpleChannelInboundHandler<SocksCmdRequest> {
 
@@ -52,11 +58,11 @@ public final class ConnectBackendHandler extends SimpleChannelInboundHandler<Soc
     private final ProxyHandler upstreamProxyHandler;
 
     public ConnectBackendHandler() {
-        String host = System.getProperty("socks5Host");
+        String host = AppProps.PROPS.getValue("upstream.socks5.host");
         if (StringUtil.isEmpty(host)) {
             upstreamProxyHandler = null;
         } else {
-            int port = Integer.valueOf(System.getProperty("socks5Port", "1080"));
+            int port = AppProps.PROPS.getInteger("upstream.socks5.port", 1080);
             upstreamProxyHandler = new Socks5ProxyHandler(new InetSocketAddress(host, port));
         }
     }

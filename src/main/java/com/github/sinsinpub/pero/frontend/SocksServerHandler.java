@@ -17,6 +17,7 @@ package com.github.sinsinpub.pero.frontend;
 
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandler;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.socks.SocksAuthResponse;
 import io.netty.handler.codec.socks.SocksAuthScheme;
@@ -26,17 +27,30 @@ import io.netty.handler.codec.socks.SocksCmdRequestDecoder;
 import io.netty.handler.codec.socks.SocksCmdType;
 import io.netty.handler.codec.socks.SocksInitResponse;
 import io.netty.handler.codec.socks.SocksRequest;
+
+import javax.annotation.Resource;
+import javax.inject.Singleton;
+
 import jodd.petite.meta.PetiteBean;
 import jodd.petite.meta.PetiteInject;
 
+import org.springframework.stereotype.Component;
+
 import com.github.sinsinpub.pero.utils.NettyChannelUtils;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 @PetiteBean
+@Component
+@Singleton
 @ChannelHandler.Sharable
 public final class SocksServerHandler extends SimpleChannelInboundHandler<SocksRequest> {
 
     @PetiteInject
-    private ChannelHandler connectBackendHandler;
+    @Resource
+    @Inject
+    @Named("connectBackendHandler")
+    private ChannelInboundHandler connectBackendHandler;
 
     @Override
     public void channelRead0(ChannelHandlerContext ctx, SocksRequest socksRequest) throws Exception {
@@ -80,11 +94,11 @@ public final class SocksServerHandler extends SimpleChannelInboundHandler<SocksR
         NettyChannelUtils.closeOnFlush(ctx.channel());
     }
 
-    public ChannelHandler getConnectBackendHandler() {
+    public ChannelInboundHandler getConnectBackendHandler() {
         return connectBackendHandler;
     }
 
-    public void setConnectBackendHandler(ChannelHandler connectBackendHandler) {
+    public void setConnectBackendHandler(ChannelInboundHandler connectBackendHandler) {
         this.connectBackendHandler = connectBackendHandler;
     }
 

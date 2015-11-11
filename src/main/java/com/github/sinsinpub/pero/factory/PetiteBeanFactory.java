@@ -8,27 +8,27 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Lite IoC implementation: Jodd PetiteContainer.
+ * Mini IoC implementation: Jodd PetiteContainer.
  */
 public class PetiteBeanFactory implements InstanceFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(PetiteBeanFactory.class);
-    private final PetiteContainer factory;
+    private final PetiteContainer container;
     private String name = PetiteContainer.PETITE_CONTAINER_REF_NAME;
     private Thread shutdownHook;
     private boolean isStarted = false;
     private long lastStartTime;
 
     /**
-     * Create PetiteContainer with default config.
+     * Create and start PetiteContainer with default config.
      */
     public PetiteBeanFactory() {
-        this.factory = new PetiteContainer();
+        this.container = new PetiteContainer();
         start();
     }
 
     public PetiteBeanFactory(PetiteConfig config) {
-        this.factory = new PetiteContainer(config);
+        this.container = new PetiteContainer(config);
         start();
     }
 
@@ -43,9 +43,9 @@ public class PetiteBeanFactory implements InstanceFactory {
     }
 
     protected void doStart() {
-        factory.addSelf(name);
+        container.addSelf(name);
         AutomagicPetiteConfigurator petiteConfigurator = new AutomagicPetiteConfigurator();
-        petiteConfigurator.configure(factory);
+        petiteConfigurator.configure(container);
         registerShutdownHook();
         logger.info(String.format("%s started up in %s ms.", name, upTime()));
     }
@@ -60,7 +60,7 @@ public class PetiteBeanFactory implements InstanceFactory {
     }
 
     protected void doStop() {
-        factory.shutdown();
+        container.shutdown();
         logger.info("{} shut down.", name);
     }
 
@@ -78,21 +78,21 @@ public class PetiteBeanFactory implements InstanceFactory {
 
     @Override
     public <T> T getInstance(Class<T> beanClass) {
-        return factory.getBean(beanClass);
+        return container.getBean(beanClass);
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public <T> T getInstance(Class<T> beanClass, String beanName) {
-        return (T) factory.getBean(beanName);
+        return (T) container.getBean(beanName);
     }
 
     public void registerBean(Class<?> beanClass) {
-        factory.registerPetiteBean(beanClass, null, null, null, false);
+        container.registerPetiteBean(beanClass, null, null, null, false);
     }
 
     public void addInstance(String beanName, Object beanInstance) {
-        factory.addBean(beanName, beanInstance);
+        container.addBean(beanName, beanInstance);
     }
 
     @Override

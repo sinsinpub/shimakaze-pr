@@ -21,13 +21,27 @@ import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.socks.SocksInitRequestDecoder;
 import io.netty.handler.codec.socks.SocksMessageEncoder;
+
+import javax.annotation.Resource;
+
 import jodd.petite.meta.PetiteBean;
 import jodd.petite.meta.PetiteInject;
 
+import org.springframework.stereotype.Component;
+
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+
 @PetiteBean
+@Component
+@Singleton
 public final class SocksServerInitializer extends ChannelInitializer<SocketChannel> {
 
     @PetiteInject
+    @Resource
+    @Inject
+    @Named("socksServerHandler")
     private ChannelInboundHandler socksServerHandler;
 
     @Override
@@ -36,6 +50,14 @@ public final class SocksServerInitializer extends ChannelInitializer<SocketChann
         p.addLast(new SocksInitRequestDecoder());
         p.addLast(new SocksMessageEncoder());
         p.addLast(socksServerHandler);
+    }
+
+    public ChannelInboundHandler getSocksServerHandler() {
+        return socksServerHandler;
+    }
+
+    public void setSocksServerHandler(ChannelInboundHandler socksServerHandler) {
+        this.socksServerHandler = socksServerHandler;
     }
 
 }
