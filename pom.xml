@@ -6,8 +6,9 @@
     <artifactId>shimakaze-pr</artifactId>
     <version>1.0</version>
     <packaging>jar</packaging>
+    <name>Shimakaze Prpr</name>
     <description>Yet another SOCKS5 proxy for KanColle to prpr Shimakaze happily,
-       which supports connections multi-backend relay and proxy-level retry.</description>
+which supports connections multi-backend relay and proxy-level retry.</description>
     <url>https://github.com/sinsinpub/shimakaze-pr</url>
 
     <properties>
@@ -206,6 +207,23 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <version>1.4</version>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>create</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <doCheck>false</doCheck>
+                    <doUpdate>false</doUpdate>
+                </configuration>
+            </plugin>
 
         </plugins>
 
@@ -223,6 +241,11 @@
         </testResources>
 
     </build>
+
+    <scm>
+        <url>${project.url}</url>
+        <connection>scm:git:${project.url}.git</connection>
+    </scm>
 
     <licenses>
         <license>

@@ -22,13 +22,10 @@ WIP :P
 
 ```
 mvn package
-java [-Dport={thisProxyPort} -Dsocks5Host={upstreamProxyHost} -Dsocks5Port={upstreamProxyPort}] -jar target/shimakaze-pr-1.0-jar-with-dependencies.jar
+java -jar target/shimakaze-pr-1.0-jar-with-dependencies.jar
 ```
 
-Defaults:
- * thisProxyPort = 1080
- * upstreamProxyHost = null
- * upstreamProxyPort = 1080
+Defaults see `resources/default.properties`, copy to `etc/runtime.properties` to override.
 
 ## License
 

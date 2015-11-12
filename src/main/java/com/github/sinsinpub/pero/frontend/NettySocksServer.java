@@ -36,10 +36,12 @@ import org.springframework.stereotype.Component;
 import com.github.sinsinpub.pero.ApplicationVersion;
 import com.github.sinsinpub.pero.config.AppProps;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 
 @PetiteBean(SocksServer.SOCKS_SERVER_BEAN_NAME)
 @Component(SocksServer.SOCKS_SERVER_BEAN_NAME)
+@Singleton
 public final class NettySocksServer implements SocksServer {
 
     private static final Logger logger = LoggerFactory.getLogger(NettySocksServer.class);
