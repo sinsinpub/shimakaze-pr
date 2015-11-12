@@ -29,6 +29,8 @@ import io.netty.handler.codec.socks.SocksInitResponse;
 import io.netty.handler.codec.socks.SocksRequest;
 
 import javax.annotation.Resource;
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 
 import jodd.petite.meta.PetiteBean;
@@ -37,8 +39,6 @@ import jodd.petite.meta.PetiteInject;
 import org.springframework.stereotype.Component;
 
 import com.github.sinsinpub.pero.utils.NettyChannelUtils;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 
 @PetiteBean
 @Component

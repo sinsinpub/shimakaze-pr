@@ -25,6 +25,9 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 
 import javax.annotation.Resource;
+import javax.inject.Inject;
+import javax.inject.Named;
+import javax.inject.Singleton;
 
 import jodd.petite.meta.PetiteBean;
 import jodd.petite.meta.PetiteInject;
@@ -35,9 +38,6 @@ import org.springframework.stereotype.Component;
 
 import com.github.sinsinpub.pero.ApplicationVersion;
 import com.github.sinsinpub.pero.config.AppProps;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 
 @PetiteBean(SocksServer.SOCKS_SERVER_BEAN_NAME)
 @Component(SocksServer.SOCKS_SERVER_BEAN_NAME)
