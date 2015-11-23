@@ -27,6 +27,8 @@ import io.netty.handler.codec.socks.SocksCmdRequestDecoder;
 import io.netty.handler.codec.socks.SocksCmdType;
 import io.netty.handler.codec.socks.SocksInitResponse;
 import io.netty.handler.codec.socks.SocksRequest;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import io.netty.util.concurrent.EventExecutorGroup;
 
 import javax.annotation.Resource;
 import javax.inject.Inject;
@@ -38,6 +40,7 @@ import jodd.petite.meta.PetiteInject;
 
 import org.springframework.stereotype.Component;
 
+import com.github.sinsinpub.pero.config.AppProps;
 import com.github.sinsinpub.pero.utils.NettyChannelUtils;
 
 @PetiteBean
@@ -51,6 +54,12 @@ public final class SocksServerHandler extends SimpleChannelInboundHandler<SocksR
     @Inject
     @Named("connectBackendHandler")
     private ChannelInboundHandler connectBackendHandler;
+    private final EventExecutorGroup oioExecutorGroup;
+
+    public SocksServerHandler() {
+        oioExecutorGroup = new DefaultEventExecutorGroup(AppProps.PROPS.getInteger(
+                "executor.thread.max", 6), ThreadFactoryRepository.OIO_EXECUTOR_GROUP);
+    }
 
     @Override
     public void channelRead0(ChannelHandlerContext ctx, SocksRequest socksRequest) throws Exception {
@@ -70,7 +79,7 @@ public final class SocksServerHandler extends SimpleChannelInboundHandler<SocksR
         case CMD:
             SocksCmdRequest req = (SocksCmdRequest) socksRequest;
             if (req.cmdType() == SocksCmdType.CONNECT) {
-                ctx.pipeline().addLast(getConnectBackendHandler());
+                ctx.pipeline().addLast(oioExecutorGroup, getConnectBackendHandler());
                 ctx.pipeline().remove(this);
                 ctx.fireChannelRead(socksRequest);
             } else {

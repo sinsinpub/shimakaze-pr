@@ -57,8 +57,8 @@ public final class NettySocksServer implements SocksServer {
     }
 
     public void run() throws InterruptedException {
-        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
+        EventLoopGroup bossGroup = new NioEventLoopGroup(1, ThreadFactoryRepository.BOSS_GORUP);
+        EventLoopGroup workerGroup = new NioEventLoopGroup(0, ThreadFactoryRepository.WORKER_GROUP);
         try {
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
