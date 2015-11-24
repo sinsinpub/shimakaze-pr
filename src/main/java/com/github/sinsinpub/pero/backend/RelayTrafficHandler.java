@@ -15,17 +15,29 @@
  */
 package com.github.sinsinpub.pero.backend;
 
-import com.github.sinsinpub.pero.utils.NettyChannelUtils;
-
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.MessageSizeEstimator;
 import io.netty.util.ReferenceCountUtil;
+
+import java.util.concurrent.atomic.AtomicLong;
+
+import jodd.datetime.JStopWatch;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.github.sinsinpub.pero.utils.NettyChannelUtils;
 
 public final class RelayTrafficHandler extends ChannelInboundHandlerAdapter {
 
+    private static final Logger logger = LoggerFactory.getLogger(RelayTrafficHandler.class);
     private final Channel relayChannel;
+    private MessageSizeEstimator.Handle estimatorHandle;
+    private final AtomicLong readBytes = new AtomicLong();
+    private final JStopWatch watch = new JStopWatch();
 
     public RelayTrafficHandler(Channel relayChannel) {
         this.relayChannel = relayChannel;
@@ -34,11 +46,14 @@ public final class RelayTrafficHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         ctx.writeAndFlush(Unpooled.EMPTY_BUFFER);
+        watch.start();
     }
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         if (relayChannel.isActive()) {
+            int size = estimatorHandle(relayChannel).size(msg);
+            readBytes.addAndGet(size);
             relayChannel.writeAndFlush(msg);
         } else {
             ReferenceCountUtil.release(msg);
@@ -50,11 +65,27 @@ public final class RelayTrafficHandler extends ChannelInboundHandlerAdapter {
         if (relayChannel.isActive()) {
             NettyChannelUtils.closeOnFlush(relayChannel);
         }
+        watch.stop();
+        recordTransferLog();
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        cause.printStackTrace();
+        watch.stop();
+        logger.error("Exception when relay traffic:", cause);
         ctx.close();
     }
+
+    void recordTransferLog() {
+        logger.info(String.format("%s, %s bytes transfered, lifetime %s millis.", relayChannel,
+                readBytes.get(), watch.total()));
+    }
+
+    final MessageSizeEstimator.Handle estimatorHandle(Channel channel) {
+        if (estimatorHandle == null) {
+            estimatorHandle = channel.config().getMessageSizeEstimator().newHandle();
+        }
+        return estimatorHandle;
+    }
+
 }

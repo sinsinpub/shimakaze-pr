@@ -46,6 +46,7 @@ public final class NettySocksServer implements SocksServer {
 
     private static final Logger logger = LoggerFactory.getLogger(NettySocksServer.class);
     private int port = AppProps.PROPS.getInteger("socks.port", 1080);
+    private int maxWorkerThreads = AppProps.PROPS.getInteger("worker.threads.max", 0);
 
     @PetiteInject
     @Resource
@@ -58,7 +59,8 @@ public final class NettySocksServer implements SocksServer {
 
     public void run() throws InterruptedException {
         EventLoopGroup bossGroup = new NioEventLoopGroup(1, ThreadFactoryRepository.BOSS_GORUP);
-        EventLoopGroup workerGroup = new NioEventLoopGroup(0, ThreadFactoryRepository.WORKER_GROUP);
+        EventLoopGroup workerGroup = new NioEventLoopGroup(getMaxWorkerThreads(),
+                ThreadFactoryRepository.WORKER_GROUP);
         try {
             ServerBootstrap b = new ServerBootstrap();
             b.group(bossGroup, workerGroup)
@@ -82,6 +84,14 @@ public final class NettySocksServer implements SocksServer {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public int getMaxWorkerThreads() {
+        return maxWorkerThreads;
+    }
+
+    public void setMaxWorkerThreads(int maxWorkerThreads) {
+        this.maxWorkerThreads = maxWorkerThreads;
     }
 
     public ChannelInboundHandler getSocksServerInitializer() {

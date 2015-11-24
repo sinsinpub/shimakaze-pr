@@ -38,4 +38,5 @@ public final class DirectClientHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) {
         promise.setFailure(throwable);
     }
+
 }

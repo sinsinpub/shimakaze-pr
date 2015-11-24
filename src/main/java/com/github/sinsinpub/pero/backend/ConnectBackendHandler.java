@@ -35,6 +35,8 @@ import io.netty.util.concurrent.Promise;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import javax.inject.Singleton;
 
@@ -55,6 +57,9 @@ import com.github.sinsinpub.pero.utils.NettyChannelUtils;
 public final class ConnectBackendHandler extends SimpleChannelInboundHandler<SocksCmdRequest> {
 
     private static final Logger logger = LoggerFactory.getLogger(ConnectBackendHandler.class);
+    static final AtomicLong nekoKilled = new AtomicLong();
+    private int connectTimeoutMillis = AppProps.PROPS.getInteger(
+            "upstream.socks5.connectTimeoutMillis", 10000);
 
     public ConnectBackendHandler() {
     }
@@ -65,9 +70,15 @@ public final class ConnectBackendHandler extends SimpleChannelInboundHandler<Soc
         final Channel inboundChannel = ctx.channel();
         final Promise<Channel> outboundPromise = newOutboundPromise(ctx, request);
         final int maxProxies = AppProps.PROPS.getInteger("upstream.socks5.count", 1);
+        final AtomicBoolean isFinalSuccess = new AtomicBoolean(false);
+        final AtomicBoolean isRetryOccured = new AtomicBoolean(false);
         for (int i = 1; i <= maxProxies; i++) {
+            final boolean isFirstOne = (i == 1);
+            final boolean isFinalOne = (i == maxProxies);
+            if (!isFirstOne) {
+                isRetryOccured.set(true);
+            }
             try {
-                final boolean isFinalOne = (i == maxProxies);
                 final ProxyHandler upstreamProxyHandler = newUpstreamProxyHandler(i);
                 final Bootstrap b = newConnectionBootstrap(inboundChannel, outboundPromise,
                         upstreamProxyHandler);
@@ -90,26 +101,30 @@ public final class ConnectBackendHandler extends SimpleChannelInboundHandler<Soc
                         } else {
                             // Close the connection if the connection attempt has failed.
                             if (isFinalOne) {
-                                logger.info("Backend connection failed: " + future.cause(),
+                                logger.error("Backend connection failed: " + future.cause(),
                                         future.cause());
                                 ctx.channel().writeAndFlush(
                                         new SocksCmdResponse(SocksCmdStatus.FAILURE,
                                                 request.addressType()));
                                 NettyChannelUtils.closeOnFlush(ctx.channel());
                             } else {
-                                logger.info("Backend connection failed: {}", future.cause()
+                                logger.warn("Backend connection failed: {}", future.cause()
                                         .toString());
                             }
                         }
                     }
                 });
-                connFuture.await(10, TimeUnit.SECONDS);
+                connFuture.await(getConnectTimeoutMillis(), TimeUnit.MILLISECONDS);
                 if (connFuture.isSuccess()) {
+                    isFinalSuccess.set(true);
                     break;
                 }
             } catch (Exception e) {
-                logger.info("Exception {} caught, trying next proxy...", e.toString());
+                logger.error("Connecting exception {} caught:", e);
             }
+        }
+        if (isFinalSuccess.get() && isRetryOccured.get()) {
+            logger.warn("Protected from Error-Neko: {} times", nekoKilled.incrementAndGet());
         }
     }
 
@@ -168,6 +183,7 @@ public final class ConnectBackendHandler extends SimpleChannelInboundHandler<Soc
         } else {
             int port = AppProps.PROPS.getInteger(attrPrefix.toString().concat("port"), 1080);
             upstreamProxyHandler = new Socks5ProxyHandler(new InetSocketAddress(host, port));
+            upstreamProxyHandler.setConnectTimeoutMillis(getConnectTimeoutMillis());
         }
         return upstreamProxyHandler;
     }
@@ -185,7 +201,7 @@ public final class ConnectBackendHandler extends SimpleChannelInboundHandler<Soc
         final Bootstrap b = new Bootstrap();
         b.group(inboundChannel.eventLoop())
                 .channel(NioSocketChannel.class)
-                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
+                .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, getConnectTimeoutMillis())
                 .option(ChannelOption.SO_KEEPALIVE, true)
                 .handler(new ProxyChannelInitializer(outboundPromise, upstreamProxyHandler));
         return b;
@@ -193,7 +209,16 @@ public final class ConnectBackendHandler extends SimpleChannelInboundHandler<Soc
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        NettyChannelUtils.closeOnFlush(ctx.channel());
+        // NettyChannelUtils.closeOnFlush(ctx.channel());
+        logger.error("Unexpected exception from backend proxy:", cause);
+    }
+
+    public int getConnectTimeoutMillis() {
+        return connectTimeoutMillis;
+    }
+
+    public void setConnectTimeoutMillis(int connectTimeoutMillis) {
+        this.connectTimeoutMillis = connectTimeoutMillis;
     }
 
 }

@@ -29,6 +29,7 @@ import io.netty.handler.codec.socks.SocksInitResponse;
 import io.netty.handler.codec.socks.SocksRequest;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
+import io.netty.util.internal.SystemPropertyUtil;
 
 import javax.annotation.Resource;
 import javax.inject.Inject;
@@ -38,6 +39,8 @@ import javax.inject.Singleton;
 import jodd.petite.meta.PetiteBean;
 import jodd.petite.meta.PetiteInject;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.github.sinsinpub.pero.config.AppProps;
@@ -49,6 +52,9 @@ import com.github.sinsinpub.pero.utils.NettyChannelUtils;
 @ChannelHandler.Sharable
 public final class SocksServerHandler extends SimpleChannelInboundHandler<SocksRequest> {
 
+    private static final Logger logger = LoggerFactory.getLogger(SocksServerHandler.class);
+    private static final int DEFAULT_EVENT_LOOP_THREADS = Math.max(1, SystemPropertyUtil.getInt(
+            "io.netty.eventLoopThreads", Runtime.getRuntime().availableProcessors() * 2));
     @PetiteInject
     @Resource
     @Inject
@@ -57,17 +63,19 @@ public final class SocksServerHandler extends SimpleChannelInboundHandler<SocksR
     private final EventExecutorGroup oioExecutorGroup;
 
     public SocksServerHandler() {
-        oioExecutorGroup = new DefaultEventExecutorGroup(AppProps.PROPS.getInteger(
-                "executor.thread.max", 6), ThreadFactoryRepository.OIO_EXECUTOR_GROUP);
+        int workerThreads = AppProps.PROPS.getInteger("worker.threads.max", 0);
+        int executorThreads = AppProps.PROPS.getInteger("executor.threads.max", 0);
+        if (executorThreads <= 0) {
+            executorThreads = workerThreads <= 0 ? DEFAULT_EVENT_LOOP_THREADS : workerThreads;
+        }
+        oioExecutorGroup = new DefaultEventExecutorGroup(executorThreads,
+                ThreadFactoryRepository.OIO_EXECUTOR_GROUP);
     }
 
     @Override
     public void channelRead0(ChannelHandlerContext ctx, SocksRequest socksRequest) throws Exception {
         switch (socksRequest.requestType()) {
         case INIT: {
-            // auth support example
-            // ctx.pipeline().addFirst(new SocksAuthRequestDecoder());
-            // ctx.write(new SocksInitResponse(SocksAuthScheme.AUTH_PASSWORD));
             ctx.pipeline().addFirst(new SocksCmdRequestDecoder());
             ctx.write(new SocksInitResponse(SocksAuthScheme.NO_AUTH));
             break;
@@ -99,7 +107,7 @@ public final class SocksServerHandler extends SimpleChannelInboundHandler<SocksR
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable throwable) {
-        throwable.printStackTrace();
+        logger.warn("Frontend exception caugh: {}", throwable.toString());
         NettyChannelUtils.closeOnFlush(ctx.channel());
     }
 

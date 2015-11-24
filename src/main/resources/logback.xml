@@ -7,11 +7,11 @@
 
     <!-- Load properties from file optionally -->
     <define name="confPropExists" class="ch.qos.logback.core.property.FileExistsPropertyDefiner">
-        <path>conf/log.properties</path>
+        <path>etc/log.properties</path>
     </define>
     <if condition='property("confPropExists").equals("true")'>
         <then>
-            <property file="conf/log.properties" />
+            <property file="etc/log.properties" />
         </then>
     </if>
 
