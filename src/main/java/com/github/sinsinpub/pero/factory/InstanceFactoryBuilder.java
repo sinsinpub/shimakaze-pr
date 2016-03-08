@@ -14,12 +14,17 @@ public class InstanceFactoryBuilder {
 
     /**
      * Preset of current available providers.
+     * <p>
+     * Old article:
+     * http://www.christianschenk.org/blog/comparison-between-guice-picocontainer-and-spring/
      */
     public enum PresetProvider {
         /** Spring bean factory */
         SPRING(SpringBeanFactory.class.getName()),
         /** Guice injector */
         GUICE(GuiceBeanFactory.class.getName()),
+        /** Tapestry IoC container */
+        TAPESTRY(TapestryBeanFactory.class.getName()),
         /** Jodd Petite container */
         PETITE(PetiteBeanFactory.class.getName());
         private String className;

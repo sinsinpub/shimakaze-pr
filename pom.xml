@@ -61,7 +61,7 @@ which supports connections multi-backend relay and proxy-level retry.</descripti
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-            <version>4.1.7.RELEASE</version>
+            <version>4.2.4.RELEASE</version>
             <exclusions>
                 <exclusion>
                     <groupId>commons-logging</groupId>
@@ -76,6 +76,14 @@ which supports connections multi-backend relay and proxy-level retry.</descripti
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <version>4.0</version>
+            <scope>provided</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.tapestry</groupId>
+            <artifactId>tapestry-ioc</artifactId>
+            <version>5.4.0</version>
             <scope>provided</scope>
             <optional>true</optional>
         </dependency>
