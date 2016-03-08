@@ -1,38 +1,49 @@
 package com.github.sinsinpub.pero.factory;
 
+import org.apache.tapestry5.ioc.Registry;
+import org.apache.tapestry5.ioc.RegistryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Yet another IoC implementation: Tapestry IoC container, formerly as HiveMind.
+ * Yet another IoC implementation: Tapestry IoC container, formerly known as HiveMind.
  */
 public class TapestryBeanFactory implements InstanceFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(TapestryBeanFactory.class);
+    private final Registry registry;
     private String name = TapestryApplicationModule.class.getSimpleName();
     private long lastStartTime;
 
+    public TapestryBeanFactory() {
+        // Default modules needed? IOCUtilities.buildDefaultRegistry();
+        RegistryBuilder builder = new RegistryBuilder();
+        builder.add(TapestryApplicationModule.class);
+        registry = builder.build();
+        start();
+    }
+
     @Override
     public <T> T getInstance(Class<T> beanClass) {
-        // TODO
-        throw new UnsupportedOperationException();
+        return registry.getService(beanClass);
     }
 
     @Override
     public <T> T getInstance(Class<T> beanClass, String beanName) {
-        // TODO
-        throw new UnsupportedOperationException();
+        return registry.getService(beanName, beanClass);
     }
 
     @Override
     public void start() {
         lastStartTime = System.currentTimeMillis();
+        registry.performRegistryStartup();
         logger.info("{} started", name);
     }
 
     @Override
     public void stop() {
-        logger.info("{} no need to stop", name);
+        logger.info("Stopping {}...", name);
+        registry.shutdown();
     }
 
     @Override

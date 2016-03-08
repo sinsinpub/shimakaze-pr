@@ -32,6 +32,7 @@ import javax.inject.Singleton;
 import jodd.petite.meta.PetiteBean;
 import jodd.petite.meta.PetiteInject;
 
+import org.apache.tapestry5.ioc.annotations.ServiceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -41,6 +42,7 @@ import com.github.sinsinpub.pero.config.AppProps;
 
 @PetiteBean(SocksServer.SOCKS_SERVER_BEAN_NAME)
 @Component(SocksServer.SOCKS_SERVER_BEAN_NAME)
+@ServiceId(SocksServer.SOCKS_SERVER_BEAN_NAME)
 @Singleton
 public final class NettySocksServer implements SocksServer {
 
